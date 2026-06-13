@@ -1,0 +1,18 @@
+{
+  "type": "eks-etl",
+  "team": "commercial",
+  "product": "salesb2b",
+  "project": "mice",
+  "company": "Vueling Airlines S.A.",
+  "owner": "Sales Performance",
+  "cost_domain": "COMMERCIAL",
+  "region": "eu-west-1",
+  "awspath": "/deploy/aws/",
+  "awspath_ecr": "/deploy/ecr/",
+  "ecrpath": "",
+  "ekspath": "/deploy/kubernetes/",
+  "datadogpath": "/deploy/datadog/",
+  "dagspath": "/deploy/dags/",
+  "ecr_name": "commercial-salesb2b-mice",
+  "ecr_version": "etl-v1"
+}

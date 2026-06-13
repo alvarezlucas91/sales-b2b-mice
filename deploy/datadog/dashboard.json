@@ -1,0 +1,488 @@
+{
+  "title": "${dashboard_name}",
+  "description": "Created using the Datadog provider in Terraform",
+  "widgets": [
+    {
+      "id": 2571328601799844,
+      "definition": {
+        "title": "Last runs over the time",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "legend_layout": "auto",
+        "legend_columns": ["avg", "min", "max", "value", "sum"],
+        "time": {},
+        "type": "timeseries",
+        "requests": [
+          {
+            "formulas": [{ "alias": "etl", "formula": "query1" }],
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "avg:kubernetes.containers.running{$kube_namespace,$short_image,$cluster_name}"
+              }
+            ],
+            "response_format": "timeseries",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            },
+            "display_type": "line"
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 0, "width": 8, "height": 2 }
+    },
+    {
+      "id": 558755437262524,
+      "definition": {
+        "title": "CPU limit vs usage",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "legend_layout": "auto",
+        "legend_columns": ["avg", "min", "max", "value", "sum"],
+        "time": {},
+        "type": "timeseries",
+        "requests": [
+          {
+            "formulas": [
+              {
+                "alias": "cpu-limit",
+                "style": { "palette": "warm" },
+                "formula": "query3"
+              },
+              {
+                "alias": "cpu-usage",
+                "style": { "palette": "green" },
+                "formula": "query1"
+              }
+            ],
+            "queries": [
+              {
+                "name": "query3",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.limits{$kube_namespace,$short_image,$cluster_name} by {pod_name}.rollup(max, 10)"
+              },
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.usage.total{$kube_namespace,$short_image,$cluster_name} by {pod_name}.rollup(max, 10)"
+              }
+            ],
+            "response_format": "timeseries",
+            "style": {
+              "palette": "warm",
+              "line_type": "solid",
+              "line_width": "normal"
+            },
+            "display_type": "line"
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 2, "width": 8, "height": 2 }
+    },
+    {
+      "id": 1888202781704576,
+      "definition": {
+        "title": "Memory limit vs usage",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "legend_layout": "auto",
+        "legend_columns": ["avg", "min", "max", "value", "sum"],
+        "time": {},
+        "type": "timeseries",
+        "requests": [
+          {
+            "formulas": [
+              {
+                "alias": "memory-limit",
+                "style": { "palette": "dog_classic" },
+                "formula": "query1"
+              },
+              {
+                "alias": "memory-usage",
+                "style": { "palette": "green" },
+                "formula": "query2"
+              }
+            ],
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.limits{$kube_namespace,$short_image,$cluster_name} by {pod_name}.rollup(max, 10)"
+              },
+              {
+                "name": "query2",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.usage{$kube_namespace,$short_image,$cluster_name} by {pod_name}.rollup(max, 10)"
+              }
+            ],
+            "response_format": "timeseries",
+            "style": {
+              "palette": "cool",
+              "line_type": "solid",
+              "line_width": "normal"
+            },
+            "display_type": "line"
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 4, "width": 8, "height": 2 }
+    },
+    {
+      "id": 1813401167629802,
+      "definition": {
+        "title": "% Memory over-provisioned",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query2",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.limits{kube_namespace:$kube_namespace.value,short_image:*$short_image.value,$cluster_name}",
+                "aggregator": "max"
+              },
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.usage{kube_namespace:$kube_namespace.value,short_image:*$short_image.value,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "conditional_formats": [
+              { "comparator": "<=", "palette": "white_on_green", "value": 30 },
+              { "comparator": ">", "palette": "white_on_red", "value": 60 },
+              { "comparator": ">", "palette": "white_on_yellow", "value": 30 }
+            ],
+            "formulas": [{ "formula": "((query2 - query1) * 100) / query2" }]
+          }
+        ],
+        "autoscale": true,
+        "precision": 0,
+        "timeseries_background": {
+          "yaxis": { "include_zero": false },
+          "type": "area"
+        }
+      },
+      "layout": { "x": 0, "y": 6, "width": 4, "height": 2 }
+    },
+    {
+      "id": 6562029977587644,
+      "definition": {
+        "title": "% CPU over-provisioned",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.limits{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              },
+              {
+                "name": "query2",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.usage.total{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "conditional_formats": [
+              { "comparator": ">", "palette": "white_on_red", "value": 60 },
+              { "comparator": ">", "palette": "white_on_yellow", "value": 30 },
+              {
+                "comparator": "<",
+                "palette": "custom_bg",
+                "custom_bg_color": "#000000",
+                "value": 0
+              },
+              { "comparator": "<=", "palette": "white_on_green", "value": 30 }
+            ],
+            "formulas": [
+              { "formula": "((query1 - (query2 / 1000000000)) * 100) / query1" }
+            ]
+          }
+        ],
+        "autoscale": false,
+        "precision": 2,
+        "timeseries_background": {
+          "yaxis": { "include_zero": false },
+          "type": "area"
+        }
+      },
+      "layout": { "x": 4, "y": 6, "width": 4, "height": 2 }
+    },
+    {
+      "id": 802541132376622,
+      "definition": {
+        "title": "% Memory max usage",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.usage{$cluster_name,$short_image,$kube_namespace}",
+                "aggregator": "max"
+              },
+              {
+                "name": "query2",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.limits{$cluster_name,$short_image,$kube_namespace}",
+                "aggregator": "max"
+              }
+            ],
+            "conditional_formats": [
+              { "comparator": ">=", "palette": "white_on_red", "value": 90 },
+              { "comparator": ">", "palette": "white_on_yellow", "value": 80 },
+              {
+                "comparator": "<=",
+                "palette": "custom_bg",
+                "value": 30,
+                "custom_bg_color": "#83edfb"
+              },
+              { "comparator": "<=", "value": 80, "palette": "white_on_green" }
+            ],
+            "formulas": [{ "formula": "(query1 * 100) / query2" }]
+          }
+        ],
+        "autoscale": true,
+        "precision": 0,
+        "timeseries_background": {
+          "yaxis": { "include_zero": false },
+          "type": "area"
+        }
+      },
+      "layout": { "x": 0, "y": 8, "width": 4, "height": 2 }
+    },
+    {
+      "id": 8658599706840928,
+      "definition": {
+        "title": "% CPU max usage",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query2",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.usage.total{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              },
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.limits{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "conditional_formats": [
+              { "comparator": ">=", "value": 90, "palette": "white_on_red" },
+              { "comparator": ">", "value": 80, "palette": "white_on_yellow" },
+              {
+                "comparator": "<=",
+                "value": 30,
+                "palette": "custom_bg",
+                "custom_bg_color": "#83edfb"
+              },
+              { "comparator": "<=", "value": 80, "palette": "white_on_green" }
+            ],
+            "formulas": [
+              { "formula": "((query2 / 1000000000) * 100) / query1" }
+            ]
+          }
+        ],
+        "autoscale": false,
+        "precision": 2,
+        "timeseries_background": {
+          "yaxis": { "include_zero": false },
+          "type": "area"
+        }
+      },
+      "layout": { "x": 4, "y": 8, "width": 4, "height": 2 }
+    },
+    {
+      "id": 3674559525572890,
+      "definition": {
+        "title": "Max Memory Usage",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.usage{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "formulas": [{ "formula": "query1" }]
+          }
+        ],
+        "autoscale": true,
+        "precision": 2,
+        "timeseries_background": {
+          "yaxis": { "include_zero": true },
+          "type": "area"
+        }
+      },
+      "layout": { "x": 0, "y": 10, "width": 4, "height": 2 }
+    },
+    {
+      "id": 5466945270236468,
+      "definition": {
+        "title": "Max CPU Usage",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.usage.total{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "formulas": [{ "formula": "query1 / 1000000000" }]
+          }
+        ],
+        "autoscale": false,
+        "custom_unit": "cores",
+        "precision": 3,
+        "timeseries_background": { "type": "area" }
+      },
+      "layout": { "x": 4, "y": 10, "width": 4, "height": 2 }
+    },
+    {
+      "id": 6463686619136680,
+      "definition": {
+        "title": "Memory limit",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.memory.limits{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "formulas": [{ "formula": "query1" }]
+          }
+        ],
+        "autoscale": true,
+        "precision": 2,
+        "timeseries_background": { "type": "area" }
+      },
+      "layout": { "x": 0, "y": 12, "width": 4, "height": 2 }
+    },
+    {
+      "id": 2384717406530266,
+      "definition": {
+        "title": "CPU limit",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              {
+                "name": "query1",
+                "data_source": "metrics",
+                "query": "max:kubernetes.cpu.limits{$kube_namespace,$short_image,$cluster_name}",
+                "aggregator": "max"
+              }
+            ],
+            "formulas": [{ "formula": "query1" }]
+          }
+        ],
+        "autoscale": false,
+        "custom_unit": "cores",
+        "precision": 3,
+        "timeseries_background": { "type": "area" }
+      },
+      "layout": { "x": 4, "y": 12, "width": 4, "height": 2 }
+    },
+    {
+      "id": 131478063872644,
+      "definition": {
+        "title": "Cluster ETL logs",
+        "title_size": "16",
+        "title_align": "left",
+        "requests": [
+          {
+            "response_format": "event_list",
+            "query": {
+              "data_source": "logs_stream",
+              "query_string": "image_name:*$short_image.value $cluster_name $kube_namespace",
+              "indexes": [],
+              "storage": "hot",
+              "sort": { "order": "desc", "column": "timestamp" }
+            },
+            "columns": [
+              { "field": "status_line", "width": "auto" },
+              { "field": "timestamp", "width": "auto" },
+              { "field": "pod_name", "width": "auto" },
+              { "field": "content", "width": "auto" }
+            ]
+          }
+        ],
+        "type": "list_stream"
+      },
+      "layout": { "x": 0, "y": 14, "width": 12, "height": 5 }
+    }
+  ],
+  "template_variables": [
+    {
+      "name": "cluster_name",
+      "prefix": "cluster_name",
+      "available_values": ["cluster-k8s", "cluster-k8s-pre", "cluster-k8s-pro"],
+      "default": "cluster-k8s-pro"
+    },
+    {
+      "name": "kube_namespace",
+      "prefix": "kube_namespace",
+      "available_values": ["airflow", "${eks_namespace}"],
+      "default": "${eks_namespace}"
+    },
+    {
+      "name": "short_image",
+      "prefix": "short_image",
+      "available_values": [],
+      "default": "${image_name}"
+    }
+  ],
+  "layout_type": "ordered",
+  "notify_list": [],
+  "reflow_type": "fixed",
+  "tags": []
+}

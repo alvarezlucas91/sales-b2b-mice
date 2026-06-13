@@ -1,0 +1,5 @@
+DELETE
+FROM salesb2b.cust_group_allotment
+USING salesb2b.stg_cust_group_allotment
+WHERE stg_cust_group_allotment.at_cd_allotment_name=cust_group_allotment.at_cd_allotment_name
+  AND stg_cust_group_allotment.id_inventory_leg = cust_group_allotment.id_inventory_leg

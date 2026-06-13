@@ -1,0 +1,70 @@
+trigger:
+- none
+
+parameters:
+- name: aws_ecr_push
+  displayName: 'Application Deployment: AWS ECR push'
+  type: string
+  default: push
+  values:
+  - push
+  - no-execute
+- name: aws_s3_push
+  displayName: 'Application Deployment: AWS DAGs S3 push'
+  type: string
+  default: no-execute
+  values:
+  - push
+  - no-execute
+  - destroy
+
+- name: common_terraform
+  displayName: 'Infrastructure Deployment: ECR repo terraform'
+  type: string
+  default: no-execute
+  values:
+  - deploy
+  - no-execute
+  - destroy
+- name: aws_terraform
+  displayName: 'Infrastructure Deployment: AWS terraform'
+  type: string
+  default: no-execute
+  values:
+  - deploy
+  - no-execute
+  - destroy
+- name: eks_terraform
+  displayName: 'Infrastructure Deployment: EKS terraform'
+  type: string
+  default: no-execute
+  values:
+  - deploy
+  - no-execute
+  - destroy
+- name: datadog_terraform
+  displayName: 'Infrastructure Deployment: Datadog terraform'
+  type: string
+  default: no-execute
+  values:
+  - deploy
+  - no-execute
+  - destroy
+
+
+extends:
+  template: /pipelines/etl-template-pipeline-cloud.yaml@template
+  parameters:
+      ecr_terraform: ${{ parameters.common_terraform }}
+      aws_terraform: ${{ parameters.aws_terraform }}
+      aws_ecr_push: ${{ parameters.aws_ecr_push }}
+      eks_terraform: ${{ parameters.eks_terraform }}
+      datadog_terraform: ${{ parameters.datadog_terraform }}
+      aws_s3_push: ${{ parameters.aws_s3_push }}
+
+resources:
+  repositories:
+    - repository: template
+      type: git
+      name: 'DataOps/vy-data-ccoe-pipeline-templates'
+      ref: 1.0.0

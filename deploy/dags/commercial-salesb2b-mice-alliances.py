@@ -1,0 +1,107 @@
+import pendulum
+from datetime import datetime, timedelta
+
+from dateutil.relativedelta import relativedelta
+from startSemaphoreOperator import StartSemaphoreOperator
+from finishSemaphoreOperator import FinishSemaphoreOperator
+from koSemaphoreOperator import KOSemaphoreOperator
+from airflow.models import Variable
+from airflow import models
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
+from pathlib import Path
+from kubernetes.client import models as k8s_models
+from tableauRefresherOperator import TableauRefresherOperator
+from airflow.operators.empty import EmptyOperator
+
+local_tz = pendulum.timezone("Europe/Madrid")
+
+# TAGS
+area = "commercial"
+product = "salesb2b"
+project = "mice"
+
+environment = Variable.get("env")
+account = Variable.get("account")
+tableau_id = Variable.get('TABLEAU_DATASOURCE_ALLIANCES')
+
+date_format = '%Y%m%d'
+start_date = (datetime.today() - timedelta(days=1)).strftime(date_format)
+end_date = (datetime.today() + relativedelta(months=6)).strftime(date_format)
+
+default_args = {
+    "owner": "sales",
+    "depends_on_past": False,
+    "start_date": datetime.now(tz=local_tz) - timedelta(days=1),
+    "email": [],
+    "email_on_failure": "",
+    "email_on_retry": False,
+    "retries": 0,
+    "retry_delay": 0}
+
+
+def define_capacity(capacity):
+    resources = Variable.get(capacity, deserialize_json=True)
+    return k8s_models.V1ResourceRequirements(limits=resources["limits"], requests=resources["requests"])
+
+
+def define_task(task: str):
+    str_command = f"alliances_main.py --task {task} --start_date {start_date} --end_date {end_date}"
+
+    return KubernetesPodOperator(
+        task_id=f"salesb2b-mice-alliances-{task}",
+        name=Path(__file__).stem,
+        namespace="airflow-commercial",
+        image=f"{account}.dkr.ecr.eu-west-1.amazonaws.com/{area}-{product}-{project}:{environment}",
+        image_pull_secrets=[k8s_models.V1LocalObjectReference("ecr-auth")],
+        image_pull_policy="Always",
+        arguments=str_command.split(),
+        env_vars={
+            "env": Variable.get("env"),
+            "id_exec": "{{ ti.xcom_pull('start', key='id_exec') }}",
+            "id_job": "{{ ti.xcom_pull('start', key='id_job') }}",
+            "id_dag": "{{ dag.dag_id }}",
+            "id_task": "{{ task.task_id }}",
+        },
+        labels={"app.kubernetes.io/component": "{{ task.task_id }}",
+                "tags.datadoghq.com/service": f"{area}-{product}-{project}", 
+                "tags.datadoghq.com/env": environment
+                },
+        container_resources=define_capacity("M_container_resources"),
+        startup_timeout_seconds=1000,
+        get_logs=True,
+        in_cluster=True,
+        service_account_name=f"{area}-{product}-{project}-sa",
+    )
+
+
+with models.DAG(
+        dag_id=Path(__file__).stem,
+        max_active_runs=1,
+        default_args=default_args,
+        schedule_interval=None if environment == "dev" else "17 5 * * *",
+        tags=["commercial", "salesb2b", "mice"],
+        catchup=False
+) as dag:
+    start = StartSemaphoreOperator(task_id="start", dag=dag)
+
+    tableau_refresh = TableauRefresherOperator(
+        task_id='tableau_refresh',
+        dag=dag,
+        refresh_type="datasource",
+        tableau_id=tableau_id,
+        max_retries=30,
+        time_between_retries=600,
+        retries=2,
+        retry_delay=timedelta(minutes=5)
+    ) if environment == 'pro' else EmptyOperator(dag=dag, task_id='empty_tableau_refresh')
+
+    ko = KOSemaphoreOperator(task_id="ko", dag=dag, trigger_rule="one_failed")
+    finish = FinishSemaphoreOperator(
+        task_id="finish",
+        dag=dag,
+    )
+
+    start >> define_task(task='GET_ALLIANCES_BY_SEGMENT') >> define_task(
+        task='GET_ALLIANCES_BY_FLIGHT') >> tableau_refresh >> [finish, ko]

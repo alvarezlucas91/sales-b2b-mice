@@ -1,0 +1,50 @@
+﻿{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObjectVersion",
+        "s3:PutObjectVersionTagging",
+        "s3:PutObjectTagging",
+        "s3:DeleteObjectVersionTagging",
+        "s3:DeleteObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::company-data-lake-${environment}/${team}/${product}/${project}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucketMultipartUploads",
+        "s3:ListAllMyBuckets",
+        "s3:ListBucketVersions",
+        "s3:ListBucket",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:${account}:secret:data/${team}/${product}/${project}*"
+      ]
+    },
+    {
+      "Action": "es:*",
+      "Effect": "Allow",
+      "Resource": ["arn:aws:es:eu-west-1:${account}:domain/company-central-logging"]
+    },
+    {
+      "Action": ["sts:AssumeRole", "sts:GetFederationToken"],
+      "Resource": [
+        "arn:aws:iam::${account}:role/${team}-${product}-${project}-r"
+      ],
+      "Effect": "Allow"
+    }
+  ]
+}

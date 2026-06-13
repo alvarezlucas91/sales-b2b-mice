@@ -1,0 +1,1 @@
+TRUNCATE TABLE salesb2b.stg_cust_group_allotment;

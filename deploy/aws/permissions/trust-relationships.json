@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::${account}:oidc-provider/oidc.eks.eu-west-1.amazonaws.com/id/${eks_id}"
+      },
+      "Action": ["sts:AssumeRoleWithWebIdentity"],
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.eu-west-1.amazonaws.com/id/${eks_id}:sub": "system:serviceaccount:${eks_namespace}:${service_account}",
+          "oidc.eks.eu-west-1.amazonaws.com/id/${eks_id}:aud": "sts.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "AWS": "arn:aws:iam::${account}:root"
+      },
+      "Condition": {
+        "ArnLike": {
+          "aws:PrincipalArn": "arn:aws:iam::${account}:role/${team}-${product}-${project}*"
+        }
+      }
+    }
+  ]
+}

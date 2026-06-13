@@ -1,0 +1,1 @@
+INSERT INTO vueling_calcods.[dbo].[stg_Allotment_gral] VALUES ('{0}','{1}','{2}')

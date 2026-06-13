@@ -1,0 +1,7 @@
+{
+  "eks_namespace": "airflow-commercial",
+  "service_account": "commercial-salesb2b-mice-sa",
+  "team": "commercial",
+  "product": "salesb2b",
+  "project": "mice"
+}

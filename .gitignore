@@ -1,0 +1,17 @@
+data/
+doc/
+log/
+tableau/
+
+*__pycache__
+*.ipynb_checkpoints
+*.ipynb
+
+.aws/
+.scannerwork/
+.idea/
+.vscode/
+.DS_Store
+*.pyc
+
+.env

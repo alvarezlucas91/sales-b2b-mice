@@ -1,0 +1,43 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "${eks_namespace}-pod-launcher-role"
+  namespace: "${eks_namespace}"
+  labels:
+    tags.datadoghq.com/service: apache_airflow
+    tags.datadoghq.com/team: "${team}"
+    tags.datadoghq.com/version: 2.5.3
+    tier: airflow
+  selfLink: >-
+    /apis/rbac.authorization.k8s.io/v1/namespaces/airflow/roles/airflow-pod-launcher-role
+rules:
+  - verbs:
+      - create
+      - list
+      - get
+      - patch
+      - watch
+      - delete
+    apiGroups:
+      - ""
+    resources:
+      - pods
+  - verbs:
+      - get
+    apiGroups:
+      - ""
+    resources:
+      - pods/log
+  - verbs:
+      - create
+      - get
+    apiGroups:
+      - ""
+    resources:
+      - pods/exec
+  - verbs:
+      - list
+    apiGroups:
+      - ""
+    resources:
+      - events
