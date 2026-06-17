@@ -19,7 +19,7 @@ Apache Airflow–based ETL and reporting platform that consolidates commercial s
 │  │  Group         │   │  Tour Operators: TTOO, TBA-SAS,          │  │
 │  │  Allotments    │   │  Groups, Charter, Allotments, PNRS       │  │
 │  │  ETL           │   │                                          │  │
-│  │                │   │  Partners: Travelfusion, Ypsilon,         │  │
+│  │                │   │  Partners: Travelfusion, Ypsilon,        │  │
 │  │  Sandbox       │   │  Huagati, Sundio, Corendon, Mundiplan    │  │
 │  │  Revenue       │   │                                          │  │
 │  │  Copy          │   │  Operations: PMR, Cabin Bag, Cruises,    │  │
